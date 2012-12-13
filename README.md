@@ -3,42 +3,39 @@ GraphiteContext
 
 Like the GangliaContext for Hadoop, sends metrics to Graphite
 
-Compile:
+Requirements
+------------
+maven
 
-$ jar -cf GraphiteContext.jar -C org/ .
+Compilation
+-----------
 
-Installation:
+    $ mvn clean package
 
-In your hadoop-env.sh file (usually in /etc/hadoop/conf/), add the location of the GraphiteContext.jar file into the HADOOP_CLASSPATH
+Installation
+------------
 
-example: export HADOOP_CLASSPATH="/home/brandon/GraphiteContext.jar"
+In your hadoop-env.sh file (usually in /etc/hadoop/conf/), add the
+location of the graphite-context-*.jar file to HADOOP_CLASSPATH
 
-Configuration:
+    export HADOOP_CLASSPATH="~/GraphiteContext/target/graphite-context-1.0.0-SNAPSHOT.jar"
 
-In your hadoop-metrics.properties file, add the following for all metrics
+Alternatively, drop the jar into the default hadoop libraries.
 
-mapred.class=org.apache.hadoop.metrics.graphite.GraphiteContext
-mapred.period=60
-mapred.serverName=@Your Graphite Server@
-mapred.port=2013
-jvm.class=org.apache.hadoop.metrics.graphite.GraphiteContext
-jvm.period=60
-jvm.serverName=@Your Graphite Server@
-jvm.port=2013
-dfs.class=org.apache.hadoop.metrics.graphite.GraphiteContext
-dfs.period=60
-dfs.serverName=@Your Graphite Server@
-dfs.port=2013
-ugi.class=org.apache.hadoop.metrics.graphite.GraphiteContext
-ugi.period=60
-ugi.serverName=@Your Graphite Server@
-ugi.port=2013
+Configuration
+-------------
 
-@metric@.path=@path@ can be used to specify the path in Graphite. Defaults to Platform.Hadoop
+In your hadoop-metrics.properties file, add the following for all
+metrics you want forwarded to Graphite
 
-Restart Daemons:
+    @metric@.class=org.apache.hadoop.metrics.graphite.GraphiteContext
+    @metric@.period=60
+    @metric@.serverName=@Your Graphite Server@
+    @metric@.port=@Your Graphite Server port@
+    @metric@.path=@Graphite prefix path@
 
-$sudo /etc/init.d/hadoop-tasktracker restart
-$sudo /etc/init.d/hadoop-tasktracker restart
-$sudo /etc/init.d/hadoop-tasktracker restart
-$sudo /etc/init.d/hadoop-tasktracker restart
+`@metric@.path` defaults to Platform.Hadoop
+
+Restart the required daemons, for instance:
+
+    $sudo service hadoop-tasktracker restart
