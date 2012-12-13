@@ -52,9 +52,8 @@ public class GraphiteContext extends AbstractMetricsContext {
     protected static final String PERIOD_PROPERTY = "period";
     protected static final String PORT = "port";
     protected static final String PATH = "path";
-    private String serverName = null;
     private String pathName = null;
-    private int port = 0;
+    private Writer toServer = null;
 
     private static final String separator = " ";
     private static final String gsep = ".";
@@ -62,11 +61,19 @@ public class GraphiteContext extends AbstractMetricsContext {
     /** Creates a new instance of GraphiteContext */
     public GraphiteContext() {}
 
+    @Override
     public void init(String contextName, ContextFactory factory) {
         super.init(contextName, factory);
 
-        serverName = getAttribute(SERVER_NAME_PROPERTY);
-        port = Integer.parseInt(getAttribute(PORT));
+        String serverName = getAttribute(SERVER_NAME_PROPERTY);
+        int port = Integer.parseInt(getAttribute(PORT));
+
+        try {
+            Socket server_socket = new Socket(serverName, port);
+            toServer = new OutputStreamWriter(server_socket.getOutputStream());
+        } catch (IOException dropped) {
+            /* */
+        }
 
         pathName = getAttribute(PATH);
         if (pathName == null) {
@@ -74,10 +81,20 @@ public class GraphiteContext extends AbstractMetricsContext {
         }
 
         parseAndSetPeriod(PERIOD_PROPERTY);
+    }
 
+    synchronized private void emitMetric(String metric) throws IOException {
+        if (toServer == null) {
+            throw new IOException("Could not open socket to Graphite server");
+        } else {
+            toServer.write(metric);
+            toServer.flush();
+        }
     }
 
     private String escapeForGraphite(String i) {
+        /* Seems like the standard way to cope with dots:
+           https://answers.launchpad.net/graphite/+question/191343 */
         return i.replace('.', '_');
     }
 
@@ -90,6 +107,7 @@ public class GraphiteContext extends AbstractMetricsContext {
     /**
      * Emits a metrics record to Graphite.
      */
+    @Override
     public void emitRecord(String contextName, String recordName, OutputRecord outRec) throws IOException {
         String basepath = pathName + gsep + contextName + gsep + recordName + gsep;
         StringBuilder tagpath = new StringBuilder();
@@ -110,18 +128,6 @@ public class GraphiteContext extends AbstractMetricsContext {
             sb.append(outRec.getMetric(metricName));
             sb.append(endpath);
             emitMetric(sb.toString());
-        }
-    }
-
-    protected void emitMetric(String metric) throws IOException {
-        Socket socket = new Socket(serverName, port);
-        try {
-            Writer writer = new OutputStreamWriter(socket.getOutputStream());
-            writer.write(metric);
-            writer.flush();
-            writer.close();
-        } finally {
-            socket.close();
         }
     }
 }
