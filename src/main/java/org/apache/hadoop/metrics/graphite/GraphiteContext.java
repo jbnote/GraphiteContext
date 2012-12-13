@@ -56,6 +56,9 @@ public class GraphiteContext extends AbstractMetricsContext {
     private String pathName = null;
     private int port = 0;
 
+    private static final String separator = " ";
+    private static final String gsep = ".";
+
     /** Creates a new instance of GraphiteContext */
     public GraphiteContext() {}
 
@@ -74,27 +77,39 @@ public class GraphiteContext extends AbstractMetricsContext {
 
     }
 
+    private String escapeForGraphite(String i) {
+        return i.replace('.', '_');
+    }
+
+    private String endpath() {
+        long tm = System.currentTimeMillis() / 1000; // Graphite doesn't handle milliseconds
+        String endpath =  separator + tm + "\n";
+        return endpath;
+    }
+
     /**
      * Emits a metrics record to Graphite.
      */
     public void emitRecord(String contextName, String recordName, OutputRecord outRec) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        String hostname = outRec.getTag("hostName").toString(); // Only want to send first part of hostname.
-        String split[] = hostname.split("[.]");
-        String metric = pathName + "." + contextName + "." + split[0] + "."; // Need to make the first part configurable
-        long tm = System.currentTimeMillis() / 1000; // Graphite doesn't handle milliseconds
+        String basepath = pathName + gsep + contextName + gsep + recordName + gsep;
+        StringBuilder tagpath = new StringBuilder();
+        for (String tagname : outRec.getTagNames()) {
+            tagpath.append(escapeForGraphite(outRec.getTag(tagname).toString()));
+            tagpath.append(gsep);
+        }
+
+        String startpath = basepath + tagpath.toString();
+        String endpath = endpath();
+
         for (String metricName : outRec.getMetricNames()) {
-            sb.append(metric);
+            StringBuilder sb = new StringBuilder();
+            /* should be merged */
+            sb.append(startpath);
             sb.append(metricName);
-            String separator = " ";
             sb.append(separator);
             sb.append(outRec.getMetric(metricName));
-            sb.append(separator);
-            sb.append(tm);
-            sb.append("\n");
+            sb.append(endpath);
             emitMetric(sb.toString());
-            sb = null;
-            sb = new StringBuilder();
         }
     }
 
