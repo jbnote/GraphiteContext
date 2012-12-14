@@ -61,34 +61,38 @@ public class GraphiteContext extends AbstractMetricsContext {
     /** Creates a new instance of GraphiteContext */
     public GraphiteContext() {}
 
-    @Override
-    public void init(String contextName, ContextFactory factory) {
-        super.init(contextName, factory);
+    private void init_socket() throws IOException {
+        if (toServer != null)
+            return;
 
         String serverName = getAttribute(SERVER_NAME_PROPERTY);
         int port = Integer.parseInt(getAttribute(PORT));
 
-        try {
-            Socket server_socket = new Socket(serverName, port);
-            toServer = new OutputStreamWriter(server_socket.getOutputStream());
-        } catch (IOException dropped) {
-            /* */
-        }
+        Socket server_socket = new Socket(serverName, port);
+        toServer = new OutputStreamWriter(server_socket.getOutputStream());
+    }
 
+    @Override
+    public void init(String contextName, ContextFactory factory) {
+        super.init(contextName, factory);
         pathName = getAttribute(PATH);
         if (pathName == null) {
             pathName = "Platform.Hadoop";
         }
-
         parseAndSetPeriod(PERIOD_PROPERTY);
+        init_socket();
     }
 
     synchronized private void emitMetric(String metric) throws IOException {
-        if (toServer == null) {
-            throw new IOException("Could not open socket to Graphite server");
-        } else {
+        /* Not rate-limited, yet */
+        if (toServer == null)
+            init_socket();
+
+        try {
             toServer.write(metric);
             toServer.flush();
+        } catch (IOException problem) {
+            toServer = null;
         }
     }
 
