@@ -99,7 +99,7 @@ public class GraphiteContext extends AbstractMetricsContext {
     private String escapeForGraphite(String i) {
         /* Seems like the standard way to cope with dots:
            https://answers.launchpad.net/graphite/+question/191343 */
-        return i.replace('.', '_');
+        return i.replaceAll("\\W", "_");
     }
 
     private String endpath() {
@@ -125,9 +125,8 @@ public class GraphiteContext extends AbstractMetricsContext {
 
         for (String metricName : outRec.getMetricNames()) {
             StringBuilder sb = new StringBuilder();
-            /* should be merged */
             sb.append(startpath);
-            sb.append(metricName);
+            sb.append(escapeForGraphite(metricName));
             sb.append(separator);
             sb.append(outRec.getMetric(metricName));
             sb.append(endpath);
