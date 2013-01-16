@@ -80,7 +80,6 @@ public class GraphiteContext extends AbstractMetricsContext {
             pathName = "Platform.Hadoop";
         }
         parseAndSetPeriod(PERIOD_PROPERTY);
-        init_socket();
     }
 
     synchronized private void emitMetric(String metric) throws IOException {
