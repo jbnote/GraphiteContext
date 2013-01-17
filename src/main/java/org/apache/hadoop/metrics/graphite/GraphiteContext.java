@@ -115,6 +115,10 @@ public class GraphiteContext extends AbstractMetricsContext {
         String basepath = pathName + gsep + contextName + gsep + recordName + gsep;
         StringBuilder tagpath = new StringBuilder();
         for (String tagname : outRec.getTagNames()) {
+            String tagval = outRec.getTag(tagname).toString();
+            if (tagval.length() == 0)
+                continue;
+            /* Skip empty tags, which do occur */
             tagpath.append(escapeForGraphite(outRec.getTag(tagname).toString()));
             tagpath.append(gsep);
         }
