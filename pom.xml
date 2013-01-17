@@ -8,7 +8,7 @@
   <groupId>org.apache.hadoop.metrics.graphite</groupId>
   <artifactId>graphite-context</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
   <name>Apache Hadoop metrics Graphite context</name>
   <url>https://github.com/jbnote/GraphiteContext</url>
 
