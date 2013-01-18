@@ -84,10 +84,8 @@ public class GraphiteContext extends AbstractMetricsContext {
 
     synchronized private void emitMetric(String metric) throws IOException {
         /* Not rate-limited, yet */
-        if (toServer == null)
-            init_socket();
-
         try {
+            init_socket();
             toServer.write(metric);
             toServer.flush();
         } catch (IOException problem) {
