@@ -50,6 +50,7 @@ public class GraphiteContext extends AbstractMetricsContext {
     /* Configuration attribute names */
     protected static final String SERVER_NAME_PROPERTY = "serverName";
     protected static final String PERIOD_PROPERTY = "period";
+    protected static final String EXCLUDE_RECORD_PROPERTY = "excludeRecord";
     protected static final String PORT = "port";
     protected static final String PATH = "path";
     private String pathName = null;
@@ -110,8 +111,13 @@ public class GraphiteContext extends AbstractMetricsContext {
      */
     @Override
     public void emitRecord(String contextName, String recordName, OutputRecord outRec) throws IOException {
+
+        if (recordName.matches(getAttribute(EXCLUDE_RECORD_PROPERTY)))
+            return;
+
         String basepath = pathName + gsep + contextName + gsep + recordName + gsep;
         StringBuilder tagpath = new StringBuilder();
+
         for (String tagname : outRec.getTagNames()) {
             String tagval = outRec.getTag(tagname).toString();
             if (tagval.length() == 0)
